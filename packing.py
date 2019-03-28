@@ -2,6 +2,7 @@ import numpy as np
 
 from spheres import Spheres
 from space import Space
+from keepout import KeepOut
 from constraint_aggregator import ConstraintAggregator
 from openmdao.api import Group, IndepVarComp
 
@@ -37,7 +38,29 @@ class Packing(Group):
                                           r_space=r_space),
                                     promotes_inputs=['*'])
 
+        self.add_subsystem('keepout0', KeepOut(n_obj=n_obj,
+                                              x_pos=0.1,
+                                              y_pos=0.4,
+                                              r_zone=0.3),
+                                    promotes_inputs=['*'])
+
+        self.add_subsystem('keepout1', KeepOut(n_obj=n_obj,
+                                              x_pos=-0.2,
+                                              y_pos=-0.5,
+                                              r_zone=0.45),
+                                    promotes_inputs=['*'])
+
         nc = (n_obj**2 - n_obj) // 2
+
+        self.add_subsystem("constr0", ConstraintAggregator(n_const=n_obj,
+                                                       aggregator=agg,
+                                                       rho=rho))
+        self.connect('keepout0.err_zone_dist', 'constr0.g')
+
+        self.add_subsystem("constr2", ConstraintAggregator(n_const=n_obj,
+                                                       aggregator=agg,
+                                                       rho=rho))
+        self.connect('keepout1.err_zone_dist', 'constr2.g')
 
         self.add_subsystem("constr1", ConstraintAggregator(n_const=n_obj,
                                                        aggregator=agg,
