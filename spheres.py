@@ -32,9 +32,15 @@ class Spheres(ExplicitComponent):
 
         self.add_output(name='err_pair_dist', val=np.zeros((n_obj, n_obj)))
         self.add_output(name='area', val=1.0)
- 
-        self.declare_partials('err_pair_dist', ['x', 'y', 'radius'])
+        
+        import pickle
+        with open('rows_cols.dat', 'rb') as f:
+            idxs = pickle.load(f)
+        self.rows, self.cols = idxs
 
+        self.declare_partials('err_pair_dist', ['x', 'y', 'radius'], rows=self.rows, cols=self.cols)
+
+        #self.declare_partials('err_pair_dist', ['x', 'y', 'radius'])
         self.declare_partials('area', 'radius')
 
     def compute(self, inputs, outputs):
@@ -68,11 +74,22 @@ class Spheres(ExplicitComponent):
             self.epd_r[i, j, i] = self.epd_r[j, i, i] = 1.0
             self.epd_r[i, j, j] = self.epd_r[j, i, j] = 1.0
 
+        self.epd_x = self.epd_x.reshape((n_obj**2, n_obj))
+        self.epd_y = self.epd_y.reshape((n_obj**2, n_obj))
+        self.epd_r = self.epd_r.reshape((n_obj**2, n_obj))
 
     def compute_partials(self, inputs, partials):
-        partials['err_pair_dist', 'x'] = self.epd_x
-        partials['err_pair_dist', 'y'] = self.epd_y
-        partials['err_pair_dist', 'radius'] = self.epd_r
+        # rows, cols = np.where(self.epd_x != 0.0)
+        # idxs = [list(rows), list(cols)]
+        # import pickle
+        # with open('rows_cols.dat', 'wb') as f:
+        #     print(idxs)
+        #     pickle.dump(idxs, f)
+        # quit()
+
+        partials['err_pair_dist', 'x'] = self.epd_x[self.rows, self.cols]
+        partials['err_pair_dist', 'y'] = self.epd_y[self.rows, self.cols]
+        partials['err_pair_dist', 'radius'] = self.epd_r[self.rows, self.cols]
 
         partials['area', 'radius'] = 2*np.pi*inputs['radius']/ self.max_area
 
