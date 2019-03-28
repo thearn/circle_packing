@@ -52,21 +52,21 @@ class Packing(Group):
 
         nc = (n_obj**2 - n_obj) // 2
 
-        self.add_subsystem("constr0", ConstraintAggregator(n_const=n_obj,
-                                                       aggregator=agg,
-                                                       rho=rho))
-        self.connect('keepout0.err_zone_dist', 'constr0.g')
+        # self.add_subsystem("constr0", ConstraintAggregator(n_const=n_obj,
+        #                                                aggregator=agg,
+        #                                                rho=rho))
+        # self.connect('keepout0.err_zone_dist', 'constr0.g')
 
-        self.add_subsystem("constr2", ConstraintAggregator(n_const=n_obj,
-                                                       aggregator=agg,
-                                                       rho=rho))
-        self.connect('keepout1.err_zone_dist', 'constr2.g')
+        # self.add_subsystem("constr2", ConstraintAggregator(n_const=n_obj,
+        #                                                aggregator=agg,
+        #                                                rho=rho))
+        # self.connect('keepout1.err_zone_dist', 'constr2.g')
 
-        self.add_subsystem("constr1", ConstraintAggregator(n_const=n_obj,
-                                                       aggregator=agg,
-                                                       rho=rho))
+        # self.add_subsystem("constr1", ConstraintAggregator(n_const=n_obj,
+        #                                                aggregator=agg,
+        #                                                rho=rho))
 
-        self.connect('space.err_space_dist', 'constr1.g')
+        # self.connect('space.err_space_dist', 'constr1.g')
 
 if __name__ == '__main__':
     from openmdao.api import Problem
