@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 np.random.seed(0)
 
-n_obj = 500
+n_obj = 700
 aggregator = 'RePU'
 r_space = 1.0
 sum_constraints = True
@@ -33,8 +33,8 @@ p.driver.opt_settings['iSumm'] = 6
 
 p.driver.opt_settings["Major step limit"] = 2.0 #2.0
 p.driver.opt_settings['Major iterations limit'] = 1000
-p.driver.opt_settings['Major feasibility tolerance'] = 1.0E-6
-p.driver.opt_settings['Major optimality tolerance'] = 1.0E-5
+p.driver.opt_settings['Major feasibility tolerance'] = 1.0E-4
+p.driver.opt_settings['Major optimality tolerance'] = 1.0E-4
 
 #p.driver.opt_settings['Minor iterations limit'] = 10000
 #p.driver.opt_settings['Minor feasibility tolerance'] = 1.0e-4
@@ -44,13 +44,15 @@ p.driver.opt_settings['Major optimality tolerance'] = 1.0E-5
 
 p.model.add_objective('area', scaler=-1.0) # maximize area
 
-p.model.add_design_var('x', lower=-r_space, upper=0.95*r_space)
-p.model.add_design_var('y', lower=-r_space, upper=0.95*r_space)
+p.model.add_design_var('x', lower=-r_space, upper=r_space)
+p.model.add_design_var('y', lower=-r_space, upper=r_space)
 
 uniform_r = r_space / np.sqrt(n_obj)
-p.model.add_design_var('radius', lower=0.01, upper=1.0)
+p.model.add_design_var('radius', lower=uniform_r/4, upper=1.0)
 
+p.model.add_constraint('constr0.c', upper=0.0)
 p.model.add_constraint('constr1.c', upper=0.0)
+p.model.add_constraint('constr2.c', upper=0.0)
 p.model.add_constraint('spheres.err_pair_dist', upper=0.0)
 
 p.setup()
@@ -58,9 +60,9 @@ p.setup()
 
 
 
-p['x'] = np.random.uniform(-r_space,r_space,n_obj)
-p['y'] = np.random.uniform(-r_space,r_space,n_obj)
-p['radius'] = 1e-9*np.ones(n_obj)#0.1*np.ones(n_obj)
+p['x'] = np.random.uniform(-r_space, r_space, n_obj)
+p['y'] = np.random.uniform(-r_space, r_space, n_obj)
+p['radius'] = 1e-9 * np.ones(n_obj) # 0.1 * np.ones(n_obj)
 
 p.run_model()
 
@@ -69,7 +71,8 @@ p.run_driver()
 area = p['area']
 
 fig = plt.figure()
-plt.title('n = %d, np = %d, nc = %d, area = %0.1f%%' % (n_obj, 3*n_obj, n_c, 100*area))
+plt.title('n = %d, np = %d, nc = %d, area = %0.1f%%' % (n_obj, 3*n_obj, n_c,
+                                                        100*area))
 ax = plt.gca()
 
 max_r = p['radius'].max()
@@ -83,7 +86,11 @@ for i in range(n_obj):
     ax.add_artist(circle)
     circle = plt.Circle(pos, r, fill=False, linewidth=0.5)
     ax.add_artist(circle)
-circle = plt.Circle((0,0), r_space, fill=False)
+circle = plt.Circle((-0.2, -0.5), 0.45, fill=False, hatch='////')
+ax.add_artist(circle)
+circle = plt.Circle((0.1, 0.4), 0.3, fill=False, hatch='////')
+ax.add_artist(circle)
+circle = plt.Circle((0, 0), r_space, fill=False)
 ax.add_artist(circle)
 
 #plt.tight_layout(pad=1)
@@ -92,3 +99,5 @@ plt.xlim(-1.5*r_space, 1.5*r_space)
 plt.ylim(-1.5*r_space, 1.5*r_space)
 
 plt.show()
+
+

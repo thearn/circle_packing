@@ -2,6 +2,7 @@ import numpy as np
 from openmdao.api import Group, Problem, ExplicitComponent
 from aggregator_funcs import aggf
 from rtree import index
+from scipy.spatial import cKDTree
 
 class Spheres(ExplicitComponent):
 
@@ -36,6 +37,50 @@ class Spheres(ExplicitComponent):
 
 
     def compute(self, inputs, outputs):
+        self.compute_kdtree(inputs, outputs)
+
+    def compute_kdtree(self, inputs, outputs):
+        n_obj = self.options['n_obj']
+        X, Y, R = inputs['x'], inputs['y'], inputs['radius']
+
+        outputs['area'] = np.sum(np.pi * inputs['radius']**2) / self.max_area
+
+        self.epd_x = np.zeros(n_obj)
+        self.epd_y = np.zeros(n_obj)
+        self.epd_r = np.zeros(n_obj)
+
+        outputs['err_pair_dist'] = 0.0
+
+        data = np.dstack((X, Y)).reshape(n_obj, 2)
+        max_r = R.max()
+        idx = cKDTree(data)
+
+        for i in range(n_obj):
+            pts = idx.query_ball_point(data[i], R[i] + max_r)
+            pts = [ii for ii in pts if ii > i]
+
+            x0,y0 = data[i]
+            r0 = R[i]
+
+            x1, y1 = data[pts].T
+            r1 = R[pts]
+
+            dist = np.sqrt((x0 - x1)**2 + (y0 - y1)**2)
+
+            err, derr = self.aggf(r0 + r1 - dist, self.rho)
+
+            self.epd_x[i] += np.sum(-(x0 - x1)/dist * derr)
+            self.epd_x[pts] += (x0 - x1)/dist * derr
+
+            self.epd_y[i] += np.sum(-(y0 - y1)/dist * derr)
+            self.epd_y[pts] += (y0 - y1)/dist * derr
+
+            self.epd_r[i] += np.sum(derr)
+            self.epd_r[pts] += derr
+
+            outputs['err_pair_dist'] += err.sum()
+
+    def compute_rtree(self, inputs, outputs):
         n_obj = self.options['n_obj']
         X, Y, R = inputs['x'], inputs['y'], inputs['radius']
         max_r = np.max(R)
