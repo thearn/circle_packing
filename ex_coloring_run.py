@@ -59,58 +59,22 @@ p.model.add_constraint('spheres.err_pair_dist', upper=0.0)
 
 p.setup()
 
-# import pickle
-# with open('data.dat', 'rb') as f:
-#     data = pickle.load(f)
+import pickle
+with open('data.dat', 'rb') as f:
+    data = pickle.load(f)
 
-# p['x'] = data['x']
-# p['y'] = data['y']
-# p['radius'] = data['radius']
+p['x'] = data['x']
+p['y'] = data['y']
+p['radius'] = data['radius']
 
-p['x'] = np.random.uniform(-r_space, r_space, n_obj)
-p['y'] = np.random.uniform(-r_space, r_space, n_obj)
-p['radius'] = 1e-9 * np.ones(n_obj) # 0.1 * np.ones(n_obj)
-
-# import time
-# p.run_model()
-# t = time.time()
-# for i in range(10):
-#     p.compute_totals()
-# tt = time.time() - t
-# print("avg. time:", tt/10)
+import time
+p.run_model()
+t = time.time()
+for i in range(10):
+    p.compute_totals()
+tt = time.time() - t
+print("avg. time:", tt/10)
 
 
-p.run_driver()
-
-area = p['area']
-
-fig = plt.figure()
-plt.title('n = %d, np = %d, nc = %d, area = %0.1f%%' % (n_obj, 3*n_obj, n_c,
-                                                        100*area))
-ax = plt.gca()
-
-max_r = p['radius'].max()
-min_r = p['radius'].min()
-for i in range(n_obj):
-    pos = p['x'][i], p['y'][i]
-    r = p['radius'][i]
-    col = plt.cm.copper((r - min_r) / (max_r - min_r))
-    plt.plot(pos[0], pos[1])
-    circle = plt.Circle(pos, r, fill=True, color=col, alpha=0.57)
-    ax.add_artist(circle)
-    circle = plt.Circle(pos, r, fill=False, linewidth=0.5)
-    ax.add_artist(circle)
-circle = plt.Circle((-0.2, -0.5), 0.45, fill=False, hatch='////')
-ax.add_artist(circle)
-circle = plt.Circle((0.1, 0.4), 0.3, fill=False, hatch='////')
-ax.add_artist(circle)
-circle = plt.Circle((0, 0), r_space, fill=False)
-ax.add_artist(circle)
-
-#plt.tight_layout(pad=1)
-plt.axis('equal')
-plt.xlim(-1.5*r_space, 1.5*r_space)
-plt.ylim(-1.5*r_space, 1.5*r_space)
-
-plt.show()
+# p.run_driver()
 
